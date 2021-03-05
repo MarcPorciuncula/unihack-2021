@@ -1,0 +1,14 @@
+{
+  "name": "unihack-2021",
+  "private": true,
+  "version": "0.0.1",
+  "author": "Marc Porciuncula <marcporciuncula@gmail.com>",
+  "repository": {
+    "url": "git@github.com:MarcPorciuncula/unihack-2021.git"
+  },
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  }
+}
