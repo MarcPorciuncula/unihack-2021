@@ -17,7 +17,7 @@ function App() {
           data?.message ? (
             <p>{data.message}</p>
           ) : (
-            <pre>
+            <pre className="text-sm">
               Please add an object at ref `messages/main` with a string property
               `message`
             </pre>
