@@ -1,0 +1,23 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+      "rootDir": "src",
+      "allowJs": true,
+      "jsx": "react",
+      "outDir": "dist",
+      "lib": [
+        "dom",
+        "dom.iterable",
+        "esnext"
+      ],
+      "allowSyntheticDefaultImports": true,
+      "moduleResolution": "node",
+      "resolveJsonModule": true,
+      "isolatedModules": true,
+      "noFallthroughCasesInSwitch": true,
+      "module": "commonjs"
+    },
+    "include": [
+      "src"
+    ]
+  }
