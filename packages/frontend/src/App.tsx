@@ -1,10 +1,11 @@
 import { BrowserRouter, Route, Switch } from "react-router-dom"
 
 import "./App.css"
-import { Draw } from "./draw"
 import { firestore } from "./firebase"
 import { useDocumentSub } from "./firestore-hooks"
 import logo from "./logo.svg"
+import { FrameView } from "./routes/frame"
+import { DrawPage } from "./routes/frame/draw"
 
 const ref = firestore.collection("messages").doc("main")
 
@@ -31,8 +32,11 @@ function App() {
             </header>
           </div>
         </Route>
-        <Route path="/draw">
-          <Draw />
+        <Route path="/frame/:frameId" exact>
+          {({ match }) => <FrameView frameId={match!.params.frameId} />}
+        </Route>
+        <Route path="/frame/:frameId/draw" exact>
+          {({ match }) => <DrawPage frameId={match!.params.frameId} />}
         </Route>
       </Switch>
     </BrowserRouter>

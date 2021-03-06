@@ -14,4 +14,8 @@ const app = firebase.initializeApp({
 const firestore = app.firestore()
 const auth = app.auth()
 
+export type FirestoreDataConverter<
+  T
+> = firebase.firestore.FirestoreDataConverter<T>
+
 export { app, firebase, firestore, auth }
