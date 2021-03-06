@@ -1,23 +1,19 @@
 {
-    "extends": "../../tsconfig.json",
-    "compilerOptions": {
-      "rootDir": "src",
-      "allowJs": true,
-      "jsx": "react",
-      "outDir": "dist",
-      "lib": [
-        "dom",
-        "dom.iterable",
-        "esnext"
-      ],
-      "allowSyntheticDefaultImports": true,
-      "moduleResolution": "node",
-      "resolveJsonModule": true,
-      "isolatedModules": true,
-      "noFallthroughCasesInSwitch": true,
-      "module": "commonjs"
-    },
-    "include": [
-      "src"
-    ]
-  }
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "allowJs": true,
+    "lib": ["dom", "es2017"],
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "outDir": "./dist",
+    "sourceMap": true,
+    "module": "commonjs",
+    "target": "es2017",
+    "declaration": true,
+    "jsx": "react"
+  },
+  "include": ["src"]
+}
