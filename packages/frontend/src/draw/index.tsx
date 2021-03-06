@@ -11,7 +11,6 @@ function createGrid(paper: paper.PaperScope, unit: number, cells: paper.Size) {
   const g = new paper.Group()
 
   const { width, height } = cells
-  console.log(width, height)
 
   for (let y = 0; y < height; y++) {
     const p = new paper.Path.Line(
