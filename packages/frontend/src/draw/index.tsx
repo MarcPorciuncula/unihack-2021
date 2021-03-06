@@ -1,5 +1,8 @@
 import { PaperScope } from "paper"
 import { useEffect, useRef } from "react"
+import * as cbor from "cbor-web"
+
+import { firestore, firebase } from "../firebase"
 
 export function Draw() {
   const ref = useRef<HTMLCanvasElement | null>(null)
@@ -24,7 +27,16 @@ export function Draw() {
     }
     t.onMouseUp = (e: any) => {
       p.simplify()
-      console.log(p.exportJSON())
+      let blob = cbor.encode(p.exportJSON({ asString: false }))
+
+      console.log(cbor.decode(blob))
+
+      firestore
+        .collection("paths")
+        .doc()
+        .set({
+          data: firebase.firestore.Blob.fromUint8Array(blob),
+        })
     }
 
     paper.tools.push(t)

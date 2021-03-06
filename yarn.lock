@@ -5427,6 +5427,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cbor-web@npm:^7.0.3":
+  version: 7.0.3
+  resolution: "cbor-web@npm:7.0.3"
+  peerDependencies:
+    bignumber.js: ^9.0.1
+  peerDependenciesMeta:
+    bignumber.js:
+      optional: true
+  checksum: 60aaa3813199286b558c593dd77aeaa08609bd4cf3f3a612e16e8fc7e6cd649999edd87a0fcc88263db9c690ea57b89d2dd6d6f7836b7ada353743e8611b094f
+  languageName: node
+  linkType: hard
+
 "chainsaw@npm:~0.1.0":
   version: 0.1.0
   resolution: "chainsaw@npm:0.1.0"
@@ -8764,6 +8776,7 @@ __metadata:
     "@types/react-dom": ^17.0.1
     "@types/react-router-dom": ^5.1.7
     autoprefixer: ^9
+    cbor-web: ^7.0.3
     classnames: ^2.2.6
     firebase: ^8.2.10
     firebase-tools: ^9.5.0
