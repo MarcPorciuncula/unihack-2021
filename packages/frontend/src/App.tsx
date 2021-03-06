@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react"
+import { BrowserRouter, Route, Switch } from "react-router-dom"
+
 import "./App.css"
 import { firebase, firestore } from "./firebase"
 import logo from "./logo.svg"
@@ -10,21 +12,27 @@ function App() {
   const { data } = useDocumentSub(ref)
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        {data !== undefined ? (
-          data?.message ? (
-            <p>{data.message}</p>
-          ) : (
-            <pre className="text-sm">
-              Please add an object at ref `messages/main` with a string property
-              `message`
-            </pre>
-          )
-        ) : null}
-      </header>
-    </div>
+    <BrowserRouter>
+      <Switch>
+        <Route path="/" exact>
+          <div className="App">
+            <header className="App-header">
+              <img src={logo} className="App-logo" alt="logo" />
+              {data !== undefined ? (
+                data?.message ? (
+                  <p>{data.message}</p>
+                ) : (
+                  <pre className="text-sm">
+                    Please add an object at ref `messages/main` with a string
+                    property `message`
+                  </pre>
+                )
+              ) : null}
+            </header>
+          </div>
+        </Route>
+      </Switch>
+    </BrowserRouter>
   )
 }
 
