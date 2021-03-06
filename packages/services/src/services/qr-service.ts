@@ -21,10 +21,17 @@ export class QRCodeService {
   async resolve(id: string): Promise<QRcode> {
     const snapshot = await admin.firestore().collection("qrcodes").doc(id).get()
 
+    console.log(
+      await admin
+        .firestore()
+        .listCollections()
+        .then((res) => res.map((r) => r.id))
+    )
+
     if (!snapshot.exists) {
       throw new functions.https.HttpsError(
         "not-found",
-        `could not find data for given short url`
+        `The QR code could not be found.`
       )
     }
 

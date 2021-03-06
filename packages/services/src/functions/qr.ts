@@ -3,7 +3,7 @@ import * as z from "zod"
 import { QRCodeService } from "../services/qr-service"
 
 const getInputSchema = z.object({
-  shortId: z.string(),
+  id: z.string(),
 })
 
 export function register(builder: functions.FunctionBuilder) {
@@ -17,14 +17,16 @@ export function register(builder: functions.FunctionBuilder) {
         throw new functions.https.HttpsError("invalid-argument", e)
       }
 
+      console.log(body)
+
       const qrService = new QRCodeService()
 
-      const qrData = await qrService.resolve(body.shortId)
+      const qrData = await qrService.resolve(body.id)
 
       if (!qrData.segment.isAvailable) {
         throw new functions.https.HttpsError(
           "unavailable",
-          "this segment is not available"
+          "This segment is not available."
         )
       }
 

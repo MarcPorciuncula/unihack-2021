@@ -1,6 +1,7 @@
 import firebase from "firebase/app"
 import "firebase/auth"
 import "firebase/firestore"
+import "firebase/functions"
 
 const app = firebase.initializeApp({
   apiKey: "AIzaSyCjWW9bW6DmR1Y-LWoPDQBin9p_KYr3FXk",
@@ -13,9 +14,14 @@ const app = firebase.initializeApp({
 
 const firestore = app.firestore()
 const auth = app.auth()
+const functions = app.functions("australia-southeast1")
 
 export type FirestoreDataConverter<
   T
 > = firebase.firestore.FirestoreDataConverter<T>
 
-export { app, firebase, firestore, auth }
+if (process.env.NODE_ENV !== "production") {
+  functions.useEmulator("localhost", 5001)
+}
+
+export { app, firebase, firestore, auth, functions }

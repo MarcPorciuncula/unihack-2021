@@ -1,17 +1,19 @@
 import * as functions from "firebase-functions"
 import * as z from "zod"
 import { QRCodeService } from "../services/qr-service"
+import { SegmentService } from "../services/segment-service"
 
-const getInputSchema = z.object({
-  shortId: z.string(),
+const claimInputSchema = z.object({
+  qrId: z.string(),
+  uid: z.string(),
 })
 
 export function register(builder: functions.FunctionBuilder) {
   return {
-    get: builder.https.onCall(async (data, context) => {
-      let body: z.TypeOf<typeof getInputSchema>
+    claim: builder.https.onCall(async (data, context) => {
+      let body: z.TypeOf<typeof claimInputSchema>
       try {
-        body = getInputSchema.parse(data)
+        body = claimInputSchema.parse(data)
       } catch (e) {
         functions.logger.error("invalid input", data, e)
         throw new functions.https.HttpsError("invalid-argument", e)
@@ -19,16 +21,23 @@ export function register(builder: functions.FunctionBuilder) {
 
       const qrService = new QRCodeService()
 
-      const qrData = await qrService.resolve(body.shortId)
+      const qrData = await qrService.resolve(body.qrId)
 
       if (!qrData.segment.isAvailable) {
         throw new functions.https.HttpsError(
           "unavailable",
-          "this segment is not available"
+          "This segment is not available."
         )
       }
 
-      return qrData
+      const segmentService = new SegmentService(qrData.frameId)
+
+      const segmentData = await segmentService.claim(
+        qrData.segment.id,
+        body.uid
+      )
+
+      return segmentData
     }),
   }
 }

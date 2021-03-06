@@ -1,9 +1,12 @@
 import * as functions from "firebase-functions"
+import * as admin from "firebase-admin"
 
 import { register as qrRegister } from "./functions/qr"
 import { register as segmentsRegister } from "./functions/segments"
 
 const australia = () => functions.region("australia-southeast1")
+
+admin.initializeApp()
 
 // Start writing Firebase Functions
 // https://firebase.google.com/docs/functions/typescript

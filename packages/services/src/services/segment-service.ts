@@ -14,7 +14,7 @@ const SegmentDataSchema = z.object({
     })
   ),
   claimedAt: z.date().nullable().default(null),
-  claimant: z.string().nullable(),
+  claimant: z.string().nullable().default(null),
   isAvailable: z.boolean(),
 })
 
@@ -36,7 +36,7 @@ export class SegmentService {
     if (!snapshot.exists) {
       throw new functions.https.HttpsError(
         "not-found",
-        `could not find segment`
+        `Could not find segment.`
       )
     }
 
@@ -67,13 +67,11 @@ export class SegmentService {
     segmentId: string,
     data: Partial<Segment>
   ): Promise<Segment> {
-    const snapshot = await this.firestore.runTransaction(
-      async (transaction) => {
-        return transaction
-          .update(this.segments.doc(segmentId), data)
-          .get(this.segments.doc(segmentId))
-      }
-    )
+    await this.firestore.runTransaction(async (transaction) => {
+      return transaction.update(this.segments.doc(segmentId), data)
+    })
+
+    const snapshot = await this.segments.doc(segmentId).get()
 
     return SegmentDataSchema.parse({
       id: snapshot.id,
