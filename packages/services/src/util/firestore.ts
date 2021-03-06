@@ -66,7 +66,7 @@ function toFirestoreField(data: FieldValue): FFieldValue {
   } else if (typeof data === "object" && data !== null && !isDate(data)) {
     return toFirestoreDocument(data)
   } else {
-    return toFirestoreLeaf(data)
+    return toFirestoreLeaf(data as string)
   }
 }
 
@@ -103,7 +103,7 @@ function deserializeField(data: FFieldValue): FieldValue {
   } else if (typeof data === "object" && data !== null && !isTimestamp(data)) {
     return fromFirestoreDocument(data)
   } else {
-    return deserializeLeaf(data)
+    return deserializeLeaf(data as string)
   }
 }
 

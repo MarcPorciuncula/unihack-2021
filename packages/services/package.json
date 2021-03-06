@@ -11,8 +11,13 @@
     "logs": "firebase functions:log"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^4.9.6",
+    "@types/ramda": "^0.27.38",
+    "date-fns": "^2.19.0",
     "firebase-admin": "^9.2.0",
-    "firebase-functions": "^3.11.0"
+    "firebase-functions": "^3.11.0",
+    "ramda": "^0.27.1",
+    "zod": "beta"
   },
   "devDependencies": {
     "firebase-functions-test": "^0.2.0",

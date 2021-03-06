@@ -2051,7 +2051,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@google-cloud/firestore@npm:^4.5.0":
+"@google-cloud/firestore@npm:^4.5.0, @google-cloud/firestore@npm:^4.9.6":
   version: 4.9.6
   resolution: "@google-cloud/firestore@npm:4.9.6"
   dependencies:
@@ -3262,6 +3262,15 @@ __metadata:
   version: 6.9.5
   resolution: "@types/qs@npm:6.9.5"
   checksum: afe4721a802a4b5fa874a7d6d9fd33c9e812bb0ef90dabb050e8072be4ab2e5e817c0feacb9b4e0771d875de99f4d9738217976aeb8d36b81ccd82ded5e9fdc0
+  languageName: node
+  linkType: hard
+
+"@types/ramda@npm:^0.27.38":
+  version: 0.27.38
+  resolution: "@types/ramda@npm:0.27.38"
+  dependencies:
+    ts-toolbelt: ^6.15.1
+  checksum: ae9aea690c18803f8c582adbdcb525839177e97b7ac590a19c1327eb17ab7d2cc7c3adc63d5d6a60a9f78354017de35fa0d66a262e04ec9307d45e302d60fee2
   languageName: node
   linkType: hard
 
@@ -6718,6 +6727,13 @@ __metadata:
   version: 0.14.2
   resolution: "date-and-time@npm:0.14.2"
   checksum: 3fbe8f519ab1d64374cd62ceb34d83eef156e796184db2da4b3c8bedf15b3b693f6eb4f232e9353fd97d3529137c12c41a232dd5ccbaee983e331995c60d18d0
+  languageName: node
+  linkType: hard
+
+"date-fns@npm:^2.19.0":
+  version: 2.19.0
+  resolution: "date-fns@npm:2.19.0"
+  checksum: 99ec34199c3a61cdb7fd27dcd68dd3c0c949ddfc34aa1daba9a6b2e0b5381bf42d8955d28ec2770f72eee429f5e7ab10fadba7b69108379d2545f003461d04f7
   languageName: node
   linkType: hard
 
@@ -15264,6 +15280,13 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"ramda@npm:^0.27.1":
+  version: 0.27.1
+  resolution: "ramda@npm:0.27.1"
+  checksum: 9aa4655dffdca66f8ba2ceabebe51996d6c75f6a2fb901a150885ace22c5950c211dd589868780b7a91c1443771702634d4370e7572d8c63c60e4b4f61aa57a9
+  languageName: node
+  linkType: hard
+
 "randombytes@npm:^2.0.0, randombytes@npm:^2.0.1, randombytes@npm:^2.0.5, randombytes@npm:^2.1.0":
   version: 2.1.0
   resolution: "randombytes@npm:2.1.0"
@@ -16580,12 +16603,17 @@ resolve@1.18.1:
   version: 0.0.0-use.local
   resolution: "services@workspace:packages/services"
   dependencies:
+    "@google-cloud/firestore": ^4.9.6
+    "@types/ramda": ^0.27.38
+    date-fns: ^2.19.0
     firebase-admin: ^9.2.0
     firebase-functions: ^3.11.0
     firebase-functions-test: ^0.2.0
     firebase-tools: ^9.5.0
     npm-run-all: ^4.1.5
+    ramda: ^0.27.1
     typescript: ^3.8.0
+    zod: beta
   languageName: unknown
   linkType: soft
 
@@ -18006,6 +18034,13 @@ resolve@1.18.1:
     typescript:
       optional: true
   checksum: 78341a27939de565e2754ff65ebb689743c16e3295528089d143c08d91842cf9029c3d6b3c95a9a20854a114a7904329d02c710d63f7ce4dbf671b8a3e560ac1
+  languageName: node
+  linkType: hard
+
+"ts-toolbelt@npm:^6.15.1":
+  version: 6.15.5
+  resolution: "ts-toolbelt@npm:6.15.5"
+  checksum: d2f585ee3439ae7a72dd7c00630491195b2a4f34107c595d567242482b9fa911b5a9b5921fb4984506c2f7d8efce61351c7f48519438df67b6c0a8dcd40c862c
   languageName: node
   linkType: hard
 
@@ -19471,5 +19506,12 @@ typescript@^4.2.3:
     compress-commons: ^4.1.0
     readable-stream: ^3.6.0
   checksum: a2338731e721d05f37989d2284d7850a3923072c5836cfc71bdedb168afa0ecd020b45b4ca09b48ae8bc489a20e5ca46cd9e0928235a8a6fda181d5ed2876919
+  languageName: node
+  linkType: hard
+
+"zod@npm:beta":
+  version: 2.0.0-beta.30
+  resolution: "zod@npm:2.0.0-beta.30"
+  checksum: 6da8f7edb41e61dca0b4a4344e2f4c4fba9c63333c6696216a3c30df07cab9acc4947bbd90f7edfb9534eda1ca7d6489e4f4000bb93e4d26d4e881933c2b10b1
   languageName: node
   linkType: hard
