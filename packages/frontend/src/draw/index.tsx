@@ -48,13 +48,10 @@ export function Draw() {
   }, [])
 
   return (
-    <div>
-      <canvas
-        ref={ref}
-        width="500"
-        height="500"
-        style={{ border: "1px dashed black" }}
-      />
-    </div>
+    <canvas
+      data-paper-resize="true"
+      ref={ref}
+      style={{ width: "100%", height: "100%" }}
+    />
   )
 }
