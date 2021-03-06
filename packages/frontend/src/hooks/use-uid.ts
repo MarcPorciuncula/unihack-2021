@@ -1,14 +1,14 @@
-import { useMemo } from "react"
-import shortid from "shortid"
+import { useEffect, useState } from "react"
+import { auth } from "../firebase"
 
 export function useUID() {
-  const uid = useMemo(() => {
-    let id = localStorage.getItem("uid")
-    if (!id) {
-      id = shortid.generate()
-      localStorage.setItem("uid", id)
+  const [uid, setUid] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    const getUser = async () => {
+      auth.signInAnonymously().then((user) => setUid(user.user?.uid))
     }
-    return id
+    getUser()
   }, [])
 
   return {
