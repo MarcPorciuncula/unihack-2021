@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { BrowserRouter, Route, Switch } from "react-router-dom"
 
 import "./App.css"
+import { Draw } from "./draw"
 import { firebase, firestore } from "./firebase"
 import logo from "./logo.svg"
 import { useStableCallback } from "./util"
@@ -30,6 +31,9 @@ function App() {
               ) : null}
             </header>
           </div>
+        </Route>
+        <Route path="/draw">
+          <Draw />
         </Route>
       </Switch>
     </BrowserRouter>

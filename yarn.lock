@@ -8767,6 +8767,7 @@ __metadata:
     classnames: ^2.2.6
     firebase: ^8.2.10
     firebase-tools: ^9.5.0
+    paper: ^0.12.11
     postcss: ^7
     react: ^17.0.1
     react-dom: ^17.0.1
@@ -13593,6 +13594,13 @@ fsevents@^1.2.7:
   version: 1.0.11
   resolution: "pako@npm:1.0.11"
   checksum: 71c60150b68220ec52a404f3c39a4ed38f750e42452b88fe0eb2e6b5c98e91f73f706444359b097aca1e6db83ef8fef50b5a9ec100e30a606cda6da8d45e5439
+  languageName: node
+  linkType: hard
+
+"paper@npm:^0.12.11":
+  version: 0.12.11
+  resolution: "paper@npm:0.12.11"
+  checksum: 5498fa2266b081733a976cf6d959aa098657fe8bfe376115b7b209f04720b37c73081151abf5f2f760b693abe9f1eb8ee4679b72919bf29b23fb0ef462a69a90
   languageName: node
   linkType: hard
 
