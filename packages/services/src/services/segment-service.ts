@@ -1,9 +1,9 @@
+import { DocumentData, DocumentReference } from "@google-cloud/firestore"
 import * as admin from "firebase-admin"
 import * as functions from "firebase-functions"
-import { doc } from "prettier"
+import * as z from "zod"
 import { Segment } from "../types/frame"
 import { fromFirestoreTypes } from "../util/firestore"
-import * as z from "zod"
 
 const SegmentDataSchema = z.object({
   id: z.string(),
@@ -20,18 +20,18 @@ const SegmentDataSchema = z.object({
 
 export class SegmentService {
   firestore: FirebaseFirestore.Firestore
-  constructor() {
-    this.firestore = admin.firestore()
-  }
+  segments: FirebaseFirestore.CollectionReference<DocumentData>
 
-  async get(frameId: string, segmentId: string): Promise<Segment> {
-    const snapshot = await admin
-      .firestore()
+  constructor(frameId: string) {
+    this.firestore = admin.firestore()
+    this.segments = this.firestore
       .collection("frames")
       .doc(frameId)
       .collection("segments")
-      .doc(segmentId)
-      .get()
+  }
+
+  async get(segmentId: string): Promise<Segment> {
+    const snapshot = await this.segments.doc(segmentId).get()
 
     if (!snapshot.exists) {
       throw new functions.https.HttpsError(
@@ -39,6 +39,41 @@ export class SegmentService {
         `could not find segment`
       )
     }
+
+    return SegmentDataSchema.parse({
+      id: snapshot.id,
+      ...fromFirestoreTypes(snapshot.data()!),
+    }) as Segment
+  }
+
+  async claim(segmentId: string, uid: string) {
+    const segment = await this.get(segmentId)
+
+    if (!segment.isAvailable) {
+      throw new functions.https.HttpsError(
+        "unavailable",
+        "this segment is no longer available"
+      )
+    }
+
+    return this.update(segmentId, {
+      claimant: uid,
+      claimedAt: new Date(),
+      isAvailable: false,
+    })
+  }
+
+  private async update(
+    segmentId: string,
+    data: Partial<Segment>
+  ): Promise<Segment> {
+    const snapshot = await this.firestore.runTransaction(
+      async (transaction) => {
+        return transaction
+          .update(this.segments.doc(segmentId), data)
+          .get(this.segments.doc(segmentId))
+      }
+    )
 
     return SegmentDataSchema.parse({
       id: snapshot.id,

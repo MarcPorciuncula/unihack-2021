@@ -14,10 +14,8 @@ const QRcodeDataSchema = z.object({
 
 export class QRCodeService {
   firestore: FirebaseFirestore.Firestore
-  segmentService: SegmentService
   constructor() {
     this.firestore = admin.firestore()
-    this.segmentService = new SegmentService()
   }
 
   async resolve(id: string): Promise<QRcode> {
@@ -35,10 +33,9 @@ export class QRCodeService {
       ...fromFirestoreTypes(snapshot.data()!),
     })
 
-    const segmentData = await this.segmentService.get(
-      qrData.frameId,
-      qrData.segmentId
-    )
+    const segmentService = new SegmentService(qrData.frameId)
+
+    const segmentData = await segmentService.get(qrData.segmentId)
 
     return { ...qrData, segment: segmentData }
   }
