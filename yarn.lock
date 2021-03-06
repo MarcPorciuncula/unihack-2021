@@ -4480,24 +4480,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"autoprefixer@npm:latest":
-  version: 10.2.5
-  resolution: "autoprefixer@npm:10.2.5"
-  dependencies:
-    browserslist: ^4.16.3
-    caniuse-lite: ^1.0.30001196
-    colorette: ^1.2.2
-    fraction.js: ^4.0.13
-    normalize-range: ^0.1.2
-    postcss-value-parser: ^4.1.0
-  peerDependencies:
-    postcss: ^8.1.0
-  bin:
-    autoprefixer: bin/autoprefixer
-  checksum: bd346dd75b7cb3bc8edca6e36edf1f4e0ae5bf0a51b2ac6d07523efd21d272d8932643f9a9410b4ee2ff36936531f7b6fa9d30d87b044579612f249fb96b9c78
-  languageName: node
-  linkType: hard
-
 "aws-sign2@npm:~0.7.0":
   version: 0.7.0
   resolution: "aws-sign2@npm:0.7.0"
@@ -5435,7 +5417,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"caniuse-lite@npm:^1.0.0, caniuse-lite@npm:^1.0.30000981, caniuse-lite@npm:^1.0.30001109, caniuse-lite@npm:^1.0.30001125, caniuse-lite@npm:^1.0.30001181, caniuse-lite@npm:^1.0.30001196":
+"caniuse-lite@npm:^1.0.0, caniuse-lite@npm:^1.0.30000981, caniuse-lite@npm:^1.0.30001109, caniuse-lite@npm:^1.0.30001125, caniuse-lite@npm:^1.0.30001181":
   version: 1.0.30001196
   resolution: "caniuse-lite@npm:1.0.30001196"
   checksum: 42c38418062cd00c43793679c1a8766f98127c3cb99c9775156b8d7843e2e12fd188791360e890c0c25a2c492ff30d9072d1727cb65a860e87a9d9fd11b0d917
@@ -8792,13 +8774,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fraction.js@npm:^4.0.13":
-  version: 4.0.13
-  resolution: "fraction.js@npm:4.0.13"
-  checksum: 1e9ec132b09f17f3e41aa53508197901277f11896f6adc0b51a4b38511e6236813a471488c319221f4fadf7c854be9566a4924215623b460364591d80e1791c3
-  languageName: node
-  linkType: hard
-
 "fragment-cache@npm:^0.2.1":
   version: 0.2.1
   resolution: "fragment-cache@npm:0.2.1"
@@ -8867,20 +8842,20 @@ __metadata:
     "@types/react-dom": ^17.0.1
     "@types/react-router-dom": ^5.1.7
     "@types/shortid": ^0.0.29
-    autoprefixer: latest
+    autoprefixer: ^9
     cbor-web: ^7.0.3
     classnames: ^2.2.6
     firebase: ^8.2.10
     firebase-tools: ^9.5.0
     framer-motion: beta
     paper: ^0.12.11
-    postcss: latest
+    postcss: ^7
     react: ^17.0.1
     react-dom: ^17.0.1
     react-router-dom: ^5.2.0
     react-scripts: 4.0.3
     shortid: ^2.2.16
-    tailwindcss: latest
+    tailwindcss: ^2.0.3
     typescript: ^4.2.3
     web-vitals: ^1.0.1
   languageName: unknown
@@ -14981,7 +14956,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"postcss@npm:^8.1.0, postcss@npm:^8.1.6, postcss@npm:^8.2.1, postcss@npm:latest":
+"postcss@npm:^8.1.0, postcss@npm:^8.1.6, postcss@npm:^8.2.1":
   version: 8.2.7
   resolution: "postcss@npm:8.2.7"
   dependencies:
@@ -17751,7 +17726,7 @@ resolve@1.18.1:
   languageName: node
   linkType: hard
 
-"tailwindcss@npm:latest":
+"tailwindcss@npm:^2.0.3":
   version: 2.0.3
   resolution: "tailwindcss@npm:2.0.3"
   dependencies:
