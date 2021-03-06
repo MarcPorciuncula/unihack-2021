@@ -3,7 +3,6 @@ import "./App.css"
 import { firestore } from "./firebase"
 import { useDocumentSub } from "./firestore-hooks"
 import logo from "./logo.svg"
-import { Redraw } from "./redraw"
 import { FrameView } from "./routes/frame"
 import { DrawPage } from "./routes/frame/draw"
 import QRCode from "./routes/qr-codes/qr-code"
@@ -38,9 +37,6 @@ function App() {
         </Route>
         <Route path="/frame/:frameId/draw" exact>
           {({ match }) => <DrawPage frameId={match!.params.frameId} />}
-        </Route>
-        <Route path="/redraw">
-          <Redraw />
         </Route>
         <Route path="/q/:id">
           <QRCode />

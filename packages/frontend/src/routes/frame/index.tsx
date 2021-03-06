@@ -9,7 +9,8 @@ import {
 } from "../../api"
 import { firebase, firestore } from "../../firebase"
 import { useDocumentSub } from "../../firestore-hooks"
-import { Grid, usePaper } from "../../paper"
+import { Grid, usePaper, PathRedrawer } from "../../paper"
+
 
 const BASIS = 150
 
@@ -101,11 +102,19 @@ class PaperDrawing {
     //   .addTo(frame.grid.group)
 
     for (const blob of data.paths) {
+
       const p = new this.paper.Path()
+      p.visible = false
       p.importJSON(cbor.decode(blob))
       p.addTo(this.group)
+
+      const drawer = new PathRedrawer(this.paper, p, 500, this.group)
+      drawer.draw()
+
+
     }
   }
+
 
   remove() {
     this.group.remove()
