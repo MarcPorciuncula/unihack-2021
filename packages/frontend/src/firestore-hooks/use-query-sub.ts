@@ -7,6 +7,9 @@ export function useQuerySub<T = firebase.firestore.DocumentData>(
   options: { onError?: (err: any) => void } = {}
 ) {
   const [data, setData] = useState<T[] | undefined>(undefined)
+  const [changes, setChanges] = useState<
+    firebase.firestore.DocumentChange<T>[]
+  >([])
   const [isLoading, setLoading] = useState(true)
 
   const onError = useStableCallback(
@@ -24,6 +27,7 @@ export function useQuerySub<T = firebase.firestore.DocumentData>(
     const unsub = ref.onSnapshot({
       next: (snapshot) => {
         setData(snapshot.docs.map((item) => item.data()))
+        setChanges(snapshot.docChanges())
         setLoading(false)
       },
       error: (err) => {
@@ -37,6 +41,7 @@ export function useQuerySub<T = firebase.firestore.DocumentData>(
 
   return {
     data,
+    changes,
     isLoading,
   }
 }
