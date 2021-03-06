@@ -39,7 +39,12 @@ export function Draw() {
         })
     }
 
-    paper.tools.push(t)
+    t.activate()
+
+    return () => {
+      // @ts-ignore
+      paper.remove()
+    }
   }, [])
 
   return (
