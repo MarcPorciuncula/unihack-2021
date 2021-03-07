@@ -1,6 +1,6 @@
 import * as cbor from "cbor-web"
 import { AnimatePresence, motion } from "framer-motion"
-import { max, min } from "ramda"
+import anime from "animejs"
 import React, { Fragment, useEffect, useMemo, useRef, useState } from "react"
 
 import {
@@ -37,26 +37,23 @@ export function DrawPage({
   )
 
   const [status, setStatus] = useState<Status | null>(null)
-  const [drawing, setDrawing] = useState<Uint8Array[]>([])
-  const [signature, setSignature] = useState<Uint8Array[]>([])
+  const [drawing, setDrawing] = useState<any[]>([])
+  const [signature, setSignature] = useState<any[]>([])
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const paperRef = usePaper(canvasRef)
   const controllerRef = useRef<DrawController>()
 
   const [bounds, setBounds] = useState<paper.Rectangle | null>(null)
   useEffect(() => {
     if (!segment) return
-    const left = segment.tiles.map((tile) => tile.location[0]).reduce(min)
-    const top = segment.tiles.map((tile) => tile.location[1]).reduce(min)
-    const right = segment.tiles.map((tile) => tile.location[0]).reduce(max)
-    const bottom = segment.tiles.map((tile) => tile.location[1]).reduce(max)
 
     const paper = paperRef.current!
     setBounds(
       new paper.Rectangle(
-        new paper.Point(left, top),
-        new paper.Point(right + 1, bottom + 1)
+        new paper.Point(...segment.region.tl),
+        new paper.Point(...segment.region.br).add(new paper.Point(1, 1))
       )
     )
   }, [paperRef, segment])
@@ -87,7 +84,7 @@ export function DrawPage({
   const handleCompleteDrawing = () => {
     const paths = controllerRef.current!.complete()
     setDrawing(paths)
-    controllerRef.current!.start(bounds!)
+    controllerRef.current!.start(bounds!, { placeholder: EXAMPLE_SIGNATURE })
     setStatus("sign")
   }
 
@@ -95,30 +92,73 @@ export function DrawPage({
     const signature = controllerRef.current!.complete()
     setSignature(signature)
     setStatus("review")
+    controllerRef.current!.draw(drawing)
   }
 
   const send = async () => {
-    await getDrawingCollection(firestore, frame!.id)
+    if (status === "done") return
+    setStatus("done")
+
+    const task = getDrawingCollection(firestore, frame!.id)
       .doc()
       .set({
         segmentId: segmentId,
-        tile: { x: 4, y: 4 },
-        paths: drawing,
+        region: segment!.region,
+        drawing: drawing.map((item) => cbor.encode(item)),
+        signature: signature.map((item) => cbor.encode(item.signature)),
+        createdAt: new Date(),
       })
+
+    await anime({
+      targets: canvasRef.current!,
+      keyframes: [{ scale: 0.8, borderWidth: 5, borderRadius: 32 }],
+      easing: "easeOutElastic(1, .8)",
+      duration: 1000,
+    }).finished
+
+    await anime({
+      targets: [canvasRef.current!, buttonRef.current],
+      keyframes: [
+        { translateY: 32 },
+        {
+          translateY:
+            -2 * window.innerHeight + 0.2 * canvasRef.current!.clientHeight,
+        },
+      ],
+      easing: "easeOutElastic(1, .8)",
+      duration: 3000,
+    }).finished
+
+    await task
+
+    await anime({
+      targets: [canvasRef.current!, buttonRef.current],
+      keyframes: [
+        {
+          translateY:
+            -2 * window.innerHeight + 0.2 * canvasRef.current!.clientHeight,
+        },
+      ],
+      easing: "easeOutElastic(1, .8)",
+      duration: 3000,
+    }).finished
   }
 
   return (
     <Fragment>
-      <canvas
-        ref={canvasRef}
-        style={{
-          opacity: status !== null ? 1 : 0,
-          transition: "opacity 450ms ease",
-        }}
-      />
+      <div style={{ height: "100%", width: "100%", overflow: "hidden" }}>
+        <canvas
+          ref={canvasRef}
+          style={{
+            borderColor: "black",
+            opacity: status !== null ? 1 : 0,
+            transition: "opacity 450ms ease",
+          }}
+        />
+      </div>
 
       <div className="fixed left-0 top-0 right-0 flex items-center justify-center pt-8 px-8">
-        {status ? (
+        {status && status !== "done" ? (
           <div className="border-gray-100  border-2 w-full rounded-lg text-center p-4 bg-white bg-opacity-50">
             <AnimatePresence exitBeforeEnter>
               {status === "draw" ? (
@@ -158,8 +198,14 @@ export function DrawPage({
             {status === "sign" ? (
               <RoundButton icon="done" onClick={handleCompleteSignature} />
             ) : null}
-            {status === "review" ? (
-              <RoundButton icon="send" pulse onClick={send} />
+            {status === "review" || status === "done" ? (
+              <RoundButton
+                icon="send"
+                rotateIcon={status === "done"}
+                pulse
+                onClick={send}
+                ref={buttonRef}
+              />
             ) : null}
           </div>
           <div className="flex items-center">
@@ -176,6 +222,7 @@ class DrawController {
   readonly pencil: paper.Tool
   readonly noop: paper.Tool
   readonly drawing: paper.Group
+  private placeholder: paper.Group | undefined
   readonly coord: paper.Point
   private border: paper.Item | undefined
 
@@ -197,7 +244,7 @@ class DrawController {
         const p = new this.paper.Path()
         p.strokeColor = new this.paper.Color("black")
         p.strokeCap = "round"
-        p.strokeWidth = 6
+        p.strokeWidth = 4
         return p
       },
     })
@@ -220,9 +267,23 @@ class DrawController {
 
   private handleNewPath(path: paper.Path) {
     path.addTo(this.drawing)
+    this.placeholder?.remove()
+    this.placeholder = undefined
   }
 
-  start(bounds: paper.Rectangle) {
+  draw(items: any[]) {
+    console.log(items)
+    for (const item of items) {
+      const path = new this.paper.Path()
+      path.importJSON(item)
+      this.handleNewPath(path)
+    }
+  }
+
+  start(
+    bounds: paper.Rectangle,
+    { placeholder }: { placeholder?: any[] } = {}
+  ) {
     this.grid.focus(bounds, 0.2)
     this.border = new this.paper.Path.Rectangle(
       new this.paper.Rectangle(
@@ -238,6 +299,21 @@ class DrawController {
         opacity: 0.2,
       })
       .addTo(this.grid.group)
+
+    if (placeholder) {
+      // this.placeholder = new this.paper.Group()
+      //   .set({
+      //     position: this.coord.multiply(this.grid.unit),
+      //     opacity: 0.1,
+      //   })
+      //   .addTo(this.grid.group)
+      // for (const item of placeholder) {
+      //   const path = new this.paper.Path()
+      //   path.importJSON(item)
+      //   path.addTo(this.placeholder)
+      // }
+    }
+
     this.pencil.activate()
   }
 
@@ -245,10 +321,13 @@ class DrawController {
     if (!this.drawing.children.length) return []
 
     const paths = this.drawing.children.map((item) =>
-      cbor.encode(item.exportJSON({ asString: false }))
+      item.exportJSON({ asString: false })
     )
     this.drawing.removeChildren()
     this.border?.remove()
+    this.border = undefined
+    this.placeholder?.remove()
+    this.placeholder = undefined
     this.noop.activate()
 
     return paths
@@ -280,3 +359,140 @@ function FlipText({ children }: { children?: React.ReactNode }) {
     </motion.p>
   )
 }
+
+const EXAMPLE_SIGNATURE = [
+  [
+    "Path",
+    {
+      applyMatrix: true,
+      segments: [
+        [
+          [187.02128, 224.61146],
+          [0, 0],
+          [-1.87827, 7.5129],
+        ],
+        [
+          [189.93524, 250.25438],
+          [-2.36428, -7.09282],
+          [1.32109, 3.96324],
+        ],
+        [
+          [197.9001, 246.3691],
+          [-0.34279, 3.08495],
+          [0, 0],
+        ],
+      ],
+      strokeColor: [0, 0, 0],
+      strokeWidth: 4,
+      strokeCap: "round",
+    },
+  ],
+  [
+    "Path",
+    {
+      applyMatrix: true,
+      segments: [
+        [
+          [188.18687, 206.9334],
+          [0, 0],
+          [-0.06476, 0.25902],
+        ],
+        [
+          [187.9926, 207.71045],
+          [0.06476, -0.25902],
+          [0, 0],
+        ],
+      ],
+      strokeColor: [0, 0, 0],
+      strokeWidth: 4,
+      strokeCap: "round",
+    },
+  ],
+  [
+    "Path",
+    {
+      applyMatrix: true,
+      segments: [
+        [
+          [209.36171, 224.80573],
+          [0, 0],
+          [0.90358, -1.50595],
+        ],
+        [
+          [217.13229, 222.08602],
+          [-1.05949, -6.35691],
+          [1.21813, 7.30874],
+        ],
+        [
+          [220.62905, 244.03792],
+          [0.87207, -7.35805],
+          [-0.30864, 2.60415],
+        ],
+        [
+          [214.02405, 248.31174],
+          [2.2202, -1.39555],
+          [-2.24786, 1.41294],
+        ],
+        [
+          [209.9445, 243.45513],
+          [0.07324, 0.61033],
+          [-1.20491, -10.041],
+        ],
+        [
+          [222.18317, 239.18131],
+          [-4.97931, -12.75948],
+          [1.09054, 2.79452],
+        ],
+        [
+          [224.32008, 247.92322],
+          [-0.7123, -2.91397],
+          [0, 0],
+        ],
+      ],
+      strokeColor: [0, 0, 0],
+      strokeWidth: 4,
+      strokeCap: "round",
+    },
+  ],
+  [
+    "Path",
+    {
+      applyMatrix: true,
+      segments: [
+        [
+          [235.78169, 220.53191],
+          [0, 0],
+          [0.50952, 4.58576],
+        ],
+        [
+          [236.94729, 234.32469],
+          [-0.35938, -4.59996],
+          [0.1361, 1.74201],
+        ],
+        [
+          [237.3358, 239.56983],
+          [-0.11633, -1.74504],
+          [0.78111, 11.71668],
+        ],
+        [
+          [240.83256, 224.61146],
+          [-1.43704, 4.02369],
+          [0.92403, -2.58726],
+        ],
+        [
+          [246.6605, 218.78352],
+          [-1.88945, -1.99442],
+          [6.24631, 6.59332],
+        ],
+        [
+          [255.01388, 245.59204],
+          [-2.19913, -8.79652],
+          [0, 0],
+        ],
+      ],
+      strokeColor: [0, 0, 0],
+      strokeWidth: 4,
+      strokeCap: "round",
+    },
+  ],
+]

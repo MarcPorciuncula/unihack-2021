@@ -11,7 +11,6 @@ import { firebase, firestore } from "../../firebase"
 import { useDocumentSub } from "../../firestore-hooks"
 import { Grid, usePaper, PathRedrawer } from "../../paper"
 
-
 const BASIS = 150
 
 export function FrameView({ frameId }: { frameId: string }) {
@@ -29,7 +28,7 @@ export function FrameView({ frameId }: { frameId: string }) {
         controller.dispose()
       }
     }
-  }, [frame])
+  }, [frame, paperRef])
 
   return <canvas ref={canvasRef} />
 }
@@ -59,12 +58,13 @@ class FrameController {
   }
 
   handleDrawingsSnapshot(snapshot: firebase.firestore.QuerySnapshot<Drawing>) {
-    const dataArr = snapshot.docChanges().reduce((acc: Drawing[], change: any) => {
-      if (change.type === "added") {
-        return [...acc, change.doc.data()]
-      }
-      else return acc
-    }, [])
+    const dataArr = snapshot
+      .docChanges()
+      .reduce((acc: Drawing[], change: any) => {
+        if (change.type === "added") {
+          return [...acc, change.doc.data()]
+        } else return acc
+      }, [])
     console.log(dataArr)
     this.handleNewDrawing(dataArr)
     /*
@@ -77,7 +77,13 @@ class FrameController {
   }
 
   handleNewDrawing(data: Drawing[]) {
-    const drawQueue = new DrawQueue(this.paper, this, data, this.drawings, this.grid)
+    const drawQueue = new DrawQueue(
+      this.paper,
+      this,
+      data,
+      this.drawings,
+      this.grid
+    )
     //const drawing = new PaperDrawing(this.paper, this, data)
     drawQueue.draw()
     //this.drawings.push(drawing)
@@ -114,18 +120,20 @@ class PaperDrawing {
     //   })
     //   .addTo(frame.grid.group)
 
-    this.pathArr = data.paths.map(blob => {
+    this.pathArr = data.drawing.map((blob) => {
       const p = new this.paper.Path()
       p.visible = false
       p.importJSON(cbor.decode(blob))
       return p
     })
-
   }
 
   draw() {
-    return new Promise<void>(resolve => new PathQueue(this.paper, this.pathArr, this.group).draw().then(() => resolve()))
-
+    return new Promise<void>((resolve) =>
+      new PathQueue(this.paper, this.pathArr, this.group)
+        .draw()
+        .then(() => resolve())
+    )
   }
 
   remove() {
@@ -141,9 +149,7 @@ class DrawQueue {
     private drawings: any[] = [],
     private grid: Grid,
     private delayFunction: ((i: number) => number) | null = null
-  ) {
-
-  }
+  ) {}
 
   private dispatchDraw = (i: number) => {
     if (i < this.data.length) {
@@ -155,50 +161,51 @@ class DrawQueue {
         setTimeout(() => {
           this.dispatchDraw(i + 1)
         }, this.delayFunction(i))
-      }
-      else {
+      } else {
         drawPromise.then(() => this.dispatchDraw(i + 1))
       }
-
     }
   }
 
   draw() {
     this.dispatchDraw(0)
   }
-
 }
 
 class PathQueue {
-
   constructor(
     private paper: paper.PaperScope,
     private pathArr: paper.Path[],
     private group: paper.Group,
     private delayFunction: ((i: number) => number) | null = null,
     private speedFunction: ((i: number) => number) | null = null
-  ) {
-  }
+  ) {}
 
-  private dispatchDraw = (i: number, resolve: (value: void | PromiseLike<void>) => void) => {
+  private dispatchDraw = (
+    i: number,
+    resolve: (value: void | PromiseLike<void>) => void
+  ) => {
     if (i < this.pathArr.length) {
       const delay = this.delayFunction ? this.delayFunction(i) : 300
       const speed = this.speedFunction ? this.speedFunction(i) : 500
-      const drawer = new PathRedrawer(this.paper, this.pathArr[i], speed, this.group)
+      const drawer = new PathRedrawer(
+        this.paper,
+        this.pathArr[i],
+        speed,
+        this.group
+      )
       drawer.draw()
       setTimeout(() => {
         this.dispatchDraw(i + 1, resolve)
       }, delay)
-    }
-    else {
+    } else {
       resolve()
     }
   }
 
   draw() {
-    return new Promise<void>(resolve => {
+    return new Promise<void>((resolve) => {
       this.dispatchDraw(0, resolve)
     })
-
   }
 }

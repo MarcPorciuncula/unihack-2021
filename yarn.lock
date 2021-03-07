@@ -2961,6 +2961,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/animejs@npm:^3.1.2":
+  version: 3.1.2
+  resolution: "@types/animejs@npm:3.1.2"
+  checksum: 120b3379904b7829e062ee7e6433f4979e7846e42c41603f3d5e35490debebf712dcebc68d20926c40d9431b08f511c3659a18ea7ee2c8b1d2be5acabbb5305d
+  languageName: node
+  linkType: hard
+
 "@types/anymatch@npm:*":
   version: 1.3.1
   resolution: "@types/anymatch@npm:1.3.1"
@@ -3986,6 +3993,13 @@ __metadata:
   version: 1.0.2
   resolution: "alphanum-sort@npm:1.0.2"
   checksum: 28bad91719e15959e36a791a3538924e07da356ebe3b5f992e7668e8018cfc417a7ba4a69512771e5ffa306c7e028435c7748546f66f72d4f7b0ad694cf55069
+  languageName: node
+  linkType: hard
+
+"animejs@npm:^3.2.1":
+  version: 3.2.1
+  resolution: "animejs@npm:3.2.1"
+  checksum: 01f2d38c69a9001b78a3f2b3c16d4db5481b6e0861bd05d590b23d13f69e7853dfdd299ff79cb7ef9d20172619f122738f6e1ea97f763be5fee3c8fb1e9154b5
   languageName: node
   linkType: hard
 
@@ -8843,6 +8857,7 @@ __metadata:
     "@testing-library/jest-dom": ^5.11.4
     "@testing-library/react": ^11.1.0
     "@testing-library/user-event": ^12.1.10
+    "@types/animejs": ^3.1.2
     "@types/classnames": ^2.2.11
     "@types/jest": ^26.0.20
     "@types/node": ^14.14.31
@@ -8850,6 +8865,7 @@ __metadata:
     "@types/react-dom": ^17.0.1
     "@types/react-router-dom": ^5.1.7
     "@types/shortid": ^0.0.29
+    animejs: ^3.2.1
     autoprefixer: ^9
     cbor-web: ^7.0.3
     classnames: ^2.2.6

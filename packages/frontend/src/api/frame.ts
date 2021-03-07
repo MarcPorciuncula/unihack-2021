@@ -1,4 +1,3 @@
-import { doc } from "prettier"
 import { firebase, FirestoreDataConverter } from "../firebase"
 
 export type Frame = {
@@ -21,26 +20,37 @@ export function getFramesCollection(firestore: firebase.firestore.Firestore) {
 }
 
 export type Drawing = {
-  tile: { x: number; y: number }
+  region: Segment["region"]
+  drawing: Uint8Array[]
+  signature: Uint8Array[]
+  createdAt: Date
   segmentId: string
-  paths: Uint8Array[]
 }
 
 export const DrawingConverter: FirestoreDataConverter<Drawing> = {
   fromFirestore: (snapshot) => {
     return {
-      ...snapshot.data(),
-      paths: (snapshot.data().paths as firebase.firestore.Blob[]).map((item) =>
-        item.toUint8Array()
-      ),
-    } as Drawing
+      drawing: (snapshot.get(
+        "drawing"
+      ) as firebase.firestore.Blob[]).map((item) => item.toUint8Array()),
+      signature: (snapshot.get(
+        "signature"
+      ) as firebase.firestore.Blob[]).map((item) => item.toUint8Array()),
+      createdAt: snapshot.get("createdAt").toDate(),
+      segmentId: snapshot.get("segmentId"),
+      region: snapshot.get("region"),
+    }
   },
   toFirestore: (value: Drawing) => {
     return {
       ...value,
-      paths: value.paths.map((path) =>
+      signature: value.signature.map((path) =>
         firebase.firestore.Blob.fromUint8Array(path)
       ),
+      drawing: value.drawing.map((path) =>
+        firebase.firestore.Blob.fromUint8Array(path)
+      ),
+      createdAt: firebase.firestore.Timestamp.fromDate(value.createdAt),
     }
   },
 }
@@ -60,9 +70,10 @@ export type Segment = {
   claimant: string | null
   claimedAt: Date | null
   isAvailable: boolean
-  tiles: {
-    location: [number, number]
-  }[]
+  region: {
+    br: [number, number]
+    tl: [number, number]
+  }
 }
 
 export function getSegmentsCollection(
@@ -82,7 +93,7 @@ export const SegmentConverter: FirestoreDataConverter<Segment> = {
       claimant: snapshot.get("claimant"),
       claimedAt: snapshot.get("claimedAt")?.toDate() || null,
       isAvailable: snapshot.get("isAvailable"),
-      tiles: snapshot.get("tiles"),
+      region: snapshot.get("region"),
     }
   },
   toFirestore: null!,
