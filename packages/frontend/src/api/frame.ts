@@ -74,6 +74,7 @@ export type Segment = {
     br: [number, number]
     tl: [number, number]
   }
+  qrId: string
 }
 
 export function getSegmentsCollection(
@@ -94,6 +95,7 @@ export const SegmentConverter: FirestoreDataConverter<Segment> = {
       claimedAt: snapshot.get("claimedAt")?.toDate() || null,
       isAvailable: snapshot.get("isAvailable"),
       region: snapshot.get("region"),
+      qrId: snapshot.get("qrId"),
     }
   },
   toFirestore: null!,

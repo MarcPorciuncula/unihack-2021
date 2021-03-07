@@ -1,14 +1,17 @@
 import * as cbor from "cbor-web"
 import { useEffect, useMemo, useRef } from "react"
+import qrcode from "qrcode"
 
 import {
   Drawing,
   Frame,
   getDrawingCollection,
   getFramesCollection,
+  getSegmentsCollection,
+  Segment,
 } from "../../api"
 import { firebase, firestore } from "../../firebase"
-import { useDocumentSub } from "../../firestore-hooks"
+import { useDocumentSub, useQuerySub } from "../../firestore-hooks"
 import { Grid, usePaper, PathRedrawer } from "../../paper"
 
 const BASIS = 150
@@ -18,11 +21,25 @@ export function FrameView({ frameId }: { frameId: string }) {
     useMemo(() => getFramesCollection(firestore).doc(frameId), [frameId])
   )
 
+  const { data: segments, changes } = useQuerySub(
+    useMemo(
+      () =>
+        getSegmentsCollection(firestore, frameId).where(
+          "isAvailable",
+          "==",
+          true
+        ),
+      [frameId]
+    )
+  )
+
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const controllerRef = useRef<FrameController>()
   const paperRef = usePaper(canvasRef)
   useEffect(() => {
     if (frame) {
       const controller = new FrameController(paperRef.current!, frame)
+      controllerRef.current = controller
 
       return () => {
         controller.dispose()
@@ -30,12 +47,46 @@ export function FrameView({ frameId }: { frameId: string }) {
     }
   }, [frame, paperRef])
 
+  useEffect(() => {
+    for (const [i, change] of changes.entries()) {
+      const id = change.doc.id
+      if (change.type === "added") {
+        const segment = change.doc.data()
+
+        qrcode
+          .toDataURL("https://tiles.live/frame/" + frameId + "/" + id + "/draw")
+          .then(async (encoded) => {
+            await delay(i * 1000)
+            const img = document.createElement("img")
+            img.style.display = "none"
+            img.src = encoded
+            img.setAttribute("id", id)
+            img.onload = () => {
+              controllerRef.current!.addAvailableSegment(id, segment)
+            }
+            document.body.appendChild(img)
+          })
+      }
+
+      if (change.type === "removed") {
+        const segment = change.doc.data()
+
+        const item = document.getElementById(id)
+        if (item) {
+          document.body.removeChild(item)
+        }
+        controllerRef.current!.removeAvailableSegment(id)
+      }
+    }
+  }, [changes, frameId])
+
   return <canvas ref={canvasRef} />
 }
 
 class FrameController {
   public grid: Grid
   private drawings: any[] = []
+  private segmentRasters = new Map<string, paper.Raster>()
 
   constructor(private paper: paper.PaperScope, private frame: Frame) {
     this.handleDrawingsSnapshot = this.handleDrawingsSnapshot.bind(this)
@@ -55,6 +106,32 @@ class FrameController {
     getDrawingCollection(firestore, this.frame.id).onSnapshot(
       this.handleDrawingsSnapshot
     )
+  }
+
+  addAvailableSegment(id: string, segment: Segment) {
+    const raster = new this.paper.Raster(id).set({ opacity: 0 })
+
+    raster.bounds = new this.paper.Rectangle(
+      new this.paper.Point(...segment.region.tl).multiply(this.grid.unit),
+      new this.paper.Point(...segment.region.br)
+        .add(new this.paper.Point(1, 1))
+        .multiply(this.grid.unit)
+    )
+    raster
+      .tweenTo({ opacity: 0.6 }, 8000)
+      .then(() => raster.tweenTo({ opacity: 0 }, 8000))
+    raster.addTo(this.grid.group)
+    this.segmentRasters.set(id, raster)
+  }
+
+  removeAvailableSegment(id: string) {
+    const item = this.segmentRasters.get(id)
+    if (item) {
+      item.tweenTo({ opacity: 0 }, 500).then(() => {
+        item.remove()
+      })
+      this.segmentRasters.delete(id)
+    }
   }
 
   handleDrawingsSnapshot(snapshot: firebase.firestore.QuerySnapshot<Drawing>) {
@@ -141,7 +218,7 @@ class PaperDrawing {
   }
 }
 
-class DrawQueue {
+export class DrawQueue {
   constructor(
     private paper: paper.PaperScope,
     private frame: FrameController,
@@ -172,7 +249,7 @@ class DrawQueue {
   }
 }
 
-class PathQueue {
+export class PathQueue {
   constructor(
     private paper: paper.PaperScope,
     private pathArr: paper.Path[],
@@ -209,3 +286,5 @@ class PathQueue {
     })
   }
 }
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))

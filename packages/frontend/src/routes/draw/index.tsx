@@ -1,7 +1,14 @@
+import anime from "animejs"
 import * as cbor from "cbor-web"
 import { AnimatePresence, motion } from "framer-motion"
-import anime from "animejs"
-import React, { Fragment, useEffect, useMemo, useRef, useState } from "react"
+import React, {
+  Fragment,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
 import {
   getDrawingCollection,
@@ -9,10 +16,13 @@ import {
   getSegmentsCollection,
 } from "../../api"
 import { RoundButton } from "../../components/round-button"
+import { AuthContext } from "../../contexts/AuthContext"
 import { firestore } from "../../firebase"
 import { useDocumentSub } from "../../firestore-hooks"
+import { useDelayedCloudFunction } from "../../firestore-hooks/use-cloud-function"
 import { Grid, usePaper } from "../../paper"
 import { PencilTool } from "../../paper/pencil"
+import { PathQueue } from "../frame"
 
 const BASIS = 150
 
@@ -35,6 +45,19 @@ export function DrawPage({
       segmentId,
     ])
   )
+
+  const { uid } = useContext(AuthContext)
+
+  const [
+    claimSegment,
+    { data: result, errors: claimErrors },
+  ] = useDelayedCloudFunction<SegmentsClaimResult>("segments-claim")
+
+  useEffect(() => {
+    if (uid && segment) {
+      claimSegment({ qrId: segment.qrId, uid })
+    }
+  }, [uid, segment])
 
   const [status, setStatus] = useState<Status | null>(null)
   const [drawing, setDrawing] = useState<any[]>([])
@@ -99,16 +122,6 @@ export function DrawPage({
     if (status === "done") return
     setStatus("done")
 
-    const task = getDrawingCollection(firestore, frame!.id)
-      .doc()
-      .set({
-        segmentId: segmentId,
-        region: segment!.region,
-        drawing: drawing.map((item) => cbor.encode(item)),
-        signature: signature.map((item) => cbor.encode(item.signature)),
-        createdAt: new Date(),
-      })
-
     await anime({
       targets: canvasRef.current!,
       keyframes: [{ scale: 0.8, borderWidth: 5, borderRadius: 32 }],
@@ -129,8 +142,6 @@ export function DrawPage({
       duration: 3000,
     }).finished
 
-    await task
-
     await anime({
       targets: [canvasRef.current!, buttonRef.current],
       keyframes: [
@@ -142,6 +153,18 @@ export function DrawPage({
       easing: "easeOutElastic(1, .8)",
       duration: 3000,
     }).finished
+
+    const task = getDrawingCollection(firestore, frame!.id)
+      .doc()
+      .set({
+        segmentId: segmentId,
+        region: segment!.region,
+        drawing: drawing.map((item) => cbor.encode(item)),
+        signature: signature.map((item) => cbor.encode(item.signature)),
+        createdAt: new Date(),
+      })
+
+    await task
   }
 
   return (
@@ -271,13 +294,25 @@ class DrawController {
     this.placeholder = undefined
   }
 
-  draw(items: any[]) {
-    console.log(items)
-    for (const item of items) {
-      const path = new this.paper.Path()
-      path.importJSON(item)
-      this.handleNewPath(path)
-    }
+  async draw(items: any[]) {
+    if (!items.length) return
+
+    const queue = new PathQueue(
+      this.paper,
+      items.map((k) => {
+        const path = new this.paper.Path()
+        path.importJSON(k)
+        path.set({ visible: false })
+        return path
+      }),
+      this.drawing
+    )
+    queue.draw()
+
+    // for (const item of items) {
+    //   this.handleNewPath(path)
+
+    // }
   }
 
   start(
@@ -496,3 +531,16 @@ const EXAMPLE_SIGNATURE = [
     },
   ],
 ]
+
+type SegmentsClaimResult = {
+  id: string
+  tiles: {
+    id: string
+    location: [number, number]
+  }[]
+  isAvailable: boolean
+  // if the segment has been claimed, has a reference to the user
+  claimant: string | null
+  claimedAt: Date | null
+  frameId: string
+}
