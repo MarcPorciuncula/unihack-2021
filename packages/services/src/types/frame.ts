@@ -8,6 +8,7 @@ export type Segment = {
   claimedAt: Date | null
   frameId: string
   provisionHash: string
+  qrId: string
 }
 
 export type User = {

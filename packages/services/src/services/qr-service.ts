@@ -41,8 +41,7 @@ export class QRCodeService {
     return { ...qrData, segment: segmentData }
   }
 
-  async createSegmentQr(frameId: string, segmentId: string) {
-    const id = shortid.generate()
+  async createSegmentQr(id: string, frameId: string, segmentId: string) {
     await admin
       .firestore()
       .collection("qrcodes")

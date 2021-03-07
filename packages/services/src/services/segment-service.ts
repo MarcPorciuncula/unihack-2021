@@ -19,6 +19,7 @@ const SegmentDataSchema = z.object({
   claimant: z.string().nullable().default(null),
   isAvailable: z.boolean(),
   provisionHash: z.string().default("default"),
+  qrId: z.string().default("unknown"),
 })
 
 type GetAllOptions = {
@@ -53,7 +54,6 @@ export class SegmentService {
       id: snapshot.id,
       frameId: this.frameId,
       ...fromFirestoreTypes(snapshot.data()!),
-      frameId: snapshot.ref.parent.parent!.id,
     }) as Segment
   }
 
@@ -94,13 +94,18 @@ export class SegmentService {
     })
   }
 
-  async provision(region: [[number, number], [number, number]], hash: string) {
+  async provision(
+    region: [[number, number], [number, number]],
+    hash: string,
+    qrId: string
+  ) {
     const id = shortid.generate()
     await this.segments.doc(id).set({
       isAvailable: true,
       tiles: GridService.convertRegionToTileCoordsString(region),
       region: { tl: region[0], br: region[1] },
       provisionHash: hash,
+      qrId: qrId,
     } as Partial<Segment>)
 
     return await this.get(id)
