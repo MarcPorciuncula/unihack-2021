@@ -297,22 +297,28 @@ class DrawController {
   async draw(items: any[]) {
     if (!items.length) return
 
-    const queue = new PathQueue(
-      this.paper,
-      items.map((k) => {
+    // const queue = new PathQueue(
+    //   this.paper,
+    //   items.map((k) => {
+    //     const path = new this.paper.Path()
+    //     path.importJSON(k)
+    //     path.set({ visible: false })
+    //     return path
+    //   }),
+    //   this.drawing
+    // )
+    // queue.draw()
+
+    items
+      .map((k) => {
         const path = new this.paper.Path()
         path.importJSON(k)
-        path.set({ visible: false })
+        // path.set({ visible: false })
         return path
-      }),
-      this.drawing
-    )
-    queue.draw()
-
-    // for (const item of items) {
-    //   this.handleNewPath(path)
-
-    // }
+      })
+      .forEach((path) => {
+        this.handleNewPath(path)
+      })
   }
 
   start(

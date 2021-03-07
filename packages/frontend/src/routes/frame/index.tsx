@@ -1,5 +1,5 @@
 import * as cbor from "cbor-web"
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import qrcode from "qrcode"
 
 import {
@@ -17,9 +17,17 @@ import { Grid, usePaper, PathRedrawer } from "../../paper"
 const BASIS = 150
 
 export function FrameView({ frameId }: { frameId: string }) {
-  const { data: frame } = useDocumentSub(
+  const { data: frame1 } = useDocumentSub(
     useMemo(() => getFramesCollection(firestore).doc(frameId), [frameId])
   )
+
+  const [frame, setFrame] = useState(frame1)
+
+  useEffect(() => {
+    if (!frame && frame1) {
+      setFrame(frame1)
+    }
+  }, [frame1])
 
   const { data: segments, changes } = useQuerySub(
     useMemo(
@@ -56,7 +64,7 @@ export function FrameView({ frameId }: { frameId: string }) {
         qrcode
           .toDataURL("https://tiles.live/frame/" + frameId + "/" + id + "/draw")
           .then(async (encoded) => {
-            await delay(i * 1000)
+            await delay(i * 5000)
             const img = document.createElement("img")
             img.style.display = "none"
             img.src = encoded
