@@ -6,6 +6,7 @@ import logo from "./logo.svg"
 import { FrameView } from "./routes/frame"
 import { DrawPage } from "./routes/draw"
 import QRCode from "./routes/qr-codes/qr-code"
+import { AuthProvider } from "./contexts/AuthContext"
 
 const ref = firestore.collection("messages").doc("main")
 
@@ -14,39 +15,41 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Switch>
-        <Route path="/" exact>
-          <div className="App">
-            <header className="App-header">
-              <img src={logo} className="App-logo" alt="logo" />
-              {data !== undefined ? (
-                data?.message ? (
-                  <p>{data.message}</p>
-                ) : (
-                  <pre className="text-sm">
-                    Please add an object at ref `messages/main` with a string
-                    property `message`
-                  </pre>
-                )
-              ) : null}
-            </header>
-          </div>
-        </Route>
-        <Route path="/frame/:frameId" exact>
-          {({ match }) => <FrameView frameId={match!.params.frameId} />}
-        </Route>
-        <Route path="/frame/:frameId/:segmentId/draw" exact>
-          {({ match }) => (
-            <DrawPage
-              frameId={match!.params.frameId}
-              segmentId={match!.params.segmentId}
-            />
-          )}
-        </Route>
-        <Route path="/q/:id">
-          <QRCode />
-        </Route>
-      </Switch>
+      <AuthProvider>
+        <Switch>
+          <Route path="/" exact>
+            <div className="App">
+              <header className="App-header">
+                <img src={logo} className="App-logo" alt="logo" />
+                {data !== undefined ? (
+                  data?.message ? (
+                    <p>{data.message}</p>
+                  ) : (
+                    <pre className="text-sm">
+                      Please add an object at ref `messages/main` with a string
+                      property `message`
+                    </pre>
+                  )
+                ) : null}
+              </header>
+            </div>
+          </Route>
+          <Route path="/frame/:frameId" exact>
+            {({ match }) => <FrameView frameId={match!.params.frameId} />}
+          </Route>
+          <Route path="/frame/:frameId/:segmentId/draw" exact>
+            {({ match }) => (
+              <DrawPage
+                frameId={match!.params.frameId}
+                segmentId={match!.params.segmentId}
+              />
+            )}
+          </Route>
+          <Route path="/q/:id">
+            <QRCode />
+          </Route>
+        </Switch>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

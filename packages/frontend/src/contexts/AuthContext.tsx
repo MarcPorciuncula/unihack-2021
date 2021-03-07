@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react'
-import { firebase, auth } from '../firebase'
+import React, { useEffect, useState } from "react"
+import { firebase, auth } from "../firebase"
 
 export const AuthContext = React.createContext<{
   currentUser: firebase.User | null
-  uid: string | null;
+  uid: string | null
   isPending: boolean
 }>({ currentUser: null, uid: null, isPending: false })
 
@@ -13,22 +13,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<firebase.User | null>(null)
 
   useEffect(() => {
-    if (currentUser) setUid(currentUser.uid)
-    else setUid(null)
-  }, [currentUser])
-
-  useEffect(() => {
-    auth.signInAnonymously().then(user => {
+    auth.signInAnonymously().then((user) => {
       setCurrentUser(user.user)
+      setUid(user.user?.uid || null)
       setPending(false)
     })
-
-    const unsub = auth.onAuthStateChanged((user) => {
-      setCurrentUser(user)
-      setPending(false)
-    })
-    return unsub
-
   }, [])
 
   return (
