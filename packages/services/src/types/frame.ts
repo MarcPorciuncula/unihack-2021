@@ -1,15 +1,22 @@
 export type Segment = {
   id: string
-  tiles: Tile[]
+  tiles: string[]
+  region: Region
   isAvailable: boolean
   // if the segment has been claimed, has a reference to the user
   claimant: string | null
   claimedAt: Date | null
   frameId: string
+  provisionHash: string
 }
 
 export type User = {
   uid: string
+}
+
+export type Region = {
+  tl: [number, number]
+  br: [number, number]
 }
 
 export type Tile = {
@@ -19,6 +26,16 @@ export type Tile = {
 
 export type Frame = {
   id: string
-  tiles: Tile[]
   createdAt: Date
+  size: { height: number; width: number }
+  currentProvisionHash: string
+}
+
+export type Provision = {
+  frameId: string
+  id: string
+  provisionedAt: Date
+  tileCount: number
+  regions: Region[]
+  tiles: string[]
 }

@@ -3,6 +3,7 @@ import * as admin from "firebase-admin"
 
 import { register as qrRegister } from "./functions/qr"
 import { register as segmentsRegister } from "./functions/segments"
+import { register as backgroundRegister } from "./functions/background"
 
 const australia = () => functions.region("australia-southeast1")
 
@@ -18,3 +19,4 @@ export const helloWorld = australia().https.onRequest((request, response) => {
 
 export const qr = qrRegister(australia())
 export const segments = segmentsRegister(australia())
+export const background = backgroundRegister(australia())

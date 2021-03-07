@@ -4,23 +4,31 @@ import * as functions from "firebase-functions"
 import * as z from "zod"
 import { Segment } from "../types/frame"
 import { fromFirestoreTypes } from "../util/firestore"
+import shortid from "shortid"
+import { GridService } from "./grid-service"
 
 const SegmentDataSchema = z.object({
   id: z.string(),
-  tiles: z.array(
-    z.object({
-      id: z.string(),
-      location: z.tuple([z.number(), z.number()]),
-    })
-  ),
+  frameId: z.string(),
+  tiles: z.array(z.string()),
+  region: z.object({
+    tl: z.tuple([z.number(), z.number()]),
+    br: z.tuple([z.number(), z.number()]),
+  }),
   claimedAt: z.date().nullable().default(null),
   claimant: z.string().nullable().default(null),
   isAvailable: z.boolean(),
+  provisionHash: z.string().default("default"),
 })
+
+type GetAllOptions = {
+  provisionHash?: string
+}
 
 export class SegmentService {
   firestore: FirebaseFirestore.Firestore
   segments: FirebaseFirestore.CollectionReference<DocumentData>
+  frameId: string
 
   constructor(frameId: string) {
     this.firestore = admin.firestore()
@@ -28,6 +36,7 @@ export class SegmentService {
       .collection("frames")
       .doc(frameId)
       .collection("segments")
+    this.frameId = frameId
   }
 
   async get(segmentId: string): Promise<Segment> {
@@ -42,9 +51,30 @@ export class SegmentService {
 
     return SegmentDataSchema.parse({
       id: snapshot.id,
+      frameId: this.frameId,
       ...fromFirestoreTypes(snapshot.data()!),
       frameId: snapshot.ref.parent.parent!.id,
     }) as Segment
+  }
+
+  async getAll(options?: GetAllOptions): Promise<Segment[]> {
+    let snapshots: FirebaseFirestore.QuerySnapshot<DocumentData>
+    if (options?.provisionHash) {
+      snapshots = await this.segments
+        .where("provisionHash", "==", options?.provisionHash)
+        .get()
+    } else {
+      snapshots = await this.segments.get()
+    }
+
+    return snapshots.docs.map(
+      (snapshot) =>
+        SegmentDataSchema.parse({
+          id: snapshot.id,
+          frameId: this.frameId,
+          ...fromFirestoreTypes(snapshot.data()!),
+        }) as Segment
+    )
   }
 
   async claim(segmentId: string, uid: string) {
@@ -64,6 +94,18 @@ export class SegmentService {
     })
   }
 
+  async provision(region: [[number, number], [number, number]], hash: string) {
+    const id = shortid.generate()
+    await this.segments.doc(id).set({
+      isAvailable: true,
+      tiles: GridService.convertRegionToTileCoordsString(region),
+      region: { tl: region[0], br: region[1] },
+      provisionHash: hash,
+    } as Partial<Segment>)
+
+    return await this.get(id)
+  }
+
   private async update(
     segmentId: string,
     data: Partial<Segment>
@@ -72,11 +114,6 @@ export class SegmentService {
       return transaction.update(this.segments.doc(segmentId), data)
     })
 
-    const snapshot = await this.segments.doc(segmentId).get()
-
-    return SegmentDataSchema.parse({
-      id: snapshot.id,
-      ...fromFirestoreTypes(snapshot.data()!),
-    }) as Segment
+    return await this.get(segmentId)
   }
 }

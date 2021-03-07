@@ -6,16 +6,12 @@ import * as z from "zod"
 
 const FrameDataSchema = z.object({
   id: z.string(),
-  tiles: z.array(
-    z.object({
-      id: z.string(),
-      location: z.tuple([z.number(), z.number()]),
-    })
-  ),
   createdAt: z.date(),
+  size: z.object({ height: z.number(), width: z.number() }),
+  currentProvisionHash: z.string(),
 })
 
-export class SegmentService {
+export class FrameService {
   firestore: FirebaseFirestore.Firestore
   constructor() {
     this.firestore = admin.firestore()
@@ -36,5 +32,30 @@ export class SegmentService {
       id: snapshot.id,
       ...fromFirestoreTypes(snapshot.data()!),
     }) as Frame
+  }
+
+  async getAll(): Promise<Frame[]> {
+    const snapshots = await admin.firestore().collection("frames").get()
+
+    if (snapshots.empty) {
+      throw new functions.https.HttpsError(
+        "not-found",
+        `could not find any frames`
+      )
+    }
+
+    return snapshots.docs.map(
+      (snapshot) =>
+        FrameDataSchema.parse({
+          id: snapshot.id,
+          ...fromFirestoreTypes(snapshot.data()!),
+        }) as Frame
+    )
+  }
+
+  async update(frameId: string, data: Partial<Frame>) {
+    console.log("update frame")
+    await this.firestore.collection("frames").doc(frameId).update(data)
+    return this.get(frameId)
   }
 }

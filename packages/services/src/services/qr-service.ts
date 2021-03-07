@@ -4,6 +4,7 @@ import { QRcode } from "../types"
 import { fromFirestoreTypes } from "../util/firestore"
 import * as z from "zod"
 import { SegmentService } from "./segment-service"
+import shortid from "shortid"
 
 const QRcodeDataSchema = z.object({
   id: z.string(),
@@ -20,13 +21,6 @@ export class QRCodeService {
 
   async resolve(id: string): Promise<QRcode> {
     const snapshot = await admin.firestore().collection("qrcodes").doc(id).get()
-
-    console.log(
-      await admin
-        .firestore()
-        .listCollections()
-        .then((res) => res.map((r) => r.id))
-    )
 
     if (!snapshot.exists) {
       throw new functions.https.HttpsError(
@@ -45,5 +39,14 @@ export class QRCodeService {
     const segmentData = await segmentService.get(qrData.segmentId)
 
     return { ...qrData, segment: segmentData }
+  }
+
+  async createSegmentQr(frameId: string, segmentId: string) {
+    const id = shortid.generate()
+    await admin
+      .firestore()
+      .collection("qrcodes")
+      .doc(id)
+      .set({ frameId, segmentId, createdAt: new Date() })
   }
 }
