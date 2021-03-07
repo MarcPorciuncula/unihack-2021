@@ -7,6 +7,7 @@ import {
   getFramesCollection,
   getSegmentsCollection,
 } from "../../api"
+import { RoundButton } from "../../components/round-button"
 import { firestore } from "../../firebase"
 import { useDocumentSub } from "../../firestore-hooks"
 import { Grid, usePaper } from "../../paper"
@@ -31,6 +32,8 @@ export function DrawPage({
       segmentId,
     ])
   )
+
+  const [isDrawing, setDrawing] = useState(false)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const paperRef = usePaper(canvasRef)
@@ -76,11 +79,14 @@ export function DrawPage({
     }
   }, [frame, paperRef, segmentId])
 
-  useEffect(() => {
-    if (bounds) {
-      controllerRef.current?.startDrawing(bounds)
-    }
-  }, [bounds])
+  const handleUndo = () => {
+    controllerRef.current?.undo()
+  }
+
+  const handleStart = () => {
+    setDrawing(true)
+    controllerRef.current?.startDrawing(bounds!)
+  }
 
   const handleCompleteDrawing = () => {
     controllerRef.current?.completeDrawing()
@@ -88,9 +94,35 @@ export function DrawPage({
 
   return (
     <Fragment>
-      <canvas ref={canvasRef} />
-      <div className="fixed left-0 bottom-0 right-0 h-12 bg-gray-100 rounded-md flex">
-        <button onClick={() => handleCompleteDrawing()}>Done</button>
+      <canvas
+        ref={canvasRef}
+        style={{
+          opacity: isDrawing ? 1 : 0,
+          transition: "opacity 450ms ease",
+        }}
+      />
+
+      <div className="fixed left-0 bottom-0 right-0 flex items-center justify-center pb-8">
+        {bounds && !isDrawing ? (
+          <RoundButton icon="edit" pulse onClick={handleStart} />
+        ) : null}
+        {isDrawing ? (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr auto 1fr",
+              gridGap: "1rem",
+            }}
+          >
+            <div className="flex items-center">
+              <RoundButton icon="undo" size="small" onClick={handleUndo} />
+            </div>
+            <RoundButton icon="done" onClick={handleCompleteDrawing} />
+            <div className="flex items-center">
+              {/* <RoundButton icon="delete" size="small" /> */}
+            </div>
+          </div>
+        ) : null}
       </div>
     </Fragment>
   )
@@ -174,6 +206,10 @@ class DrawController {
     )
 
     this.drawing.removeChildren()
+  }
+
+  undo() {
+    this.drawing.lastChild?.remove()
   }
 
   dispose() {

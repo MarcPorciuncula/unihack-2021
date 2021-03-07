@@ -1,5 +1,5 @@
 interface DrawFinishEvent extends Event {
-  id?: number;
+  id?: number
 }
 
 export class PathRedrawer {
@@ -11,7 +11,6 @@ export class PathRedrawer {
 
   private offset: number
   private event: DrawFinishEvent
-
 
   constructor(
     paper: paper.PaperScope,
@@ -30,23 +29,18 @@ export class PathRedrawer {
     this.newPath.strokeWidth = path.strokeWidth
 
     this.offset = 0
-    this.event = new Event('frameoff')
+    this.event = new Event("frameoff")
     this.event.id = this.path.id
-
-
-
   }
 
   private createFrameHandler() {
     return (e: any) => {
-
       if (!this.offset) e.delta = 0.1
 
       if (this.offset < this.path.length) {
         this.newPath.add(this.path.getPointAt(this.offset))
-        this.offset += e.delta * this.speed;
-      }
-      else {
+        this.offset += e.delta * this.speed
+      } else {
         dispatchEvent(this.event)
       }
     }
@@ -55,13 +49,16 @@ export class PathRedrawer {
   public draw() {
     const frameHandler = this.createFrameHandler()
     // Listen for the stop event.
-    window.addEventListener('frameOff', (e: DrawFinishEvent) => {
-      if (e.id === this.newPath.id) {
-        this.newPath.off('frame', frameHandler)
-      }
-    }, false);
+    window.addEventListener(
+      "frameOff",
+      (e: DrawFinishEvent) => {
+        if (e.id === this.newPath.id) {
+          this.newPath.off("frame", frameHandler)
+        }
+      },
+      false
+    )
 
     this.newPath.onFrame = frameHandler
   }
 }
-

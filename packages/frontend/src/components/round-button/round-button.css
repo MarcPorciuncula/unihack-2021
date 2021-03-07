@@ -1,0 +1,62 @@
+.RoundButton {
+  position: relative;
+}
+
+.RoundButton__ring {
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 50%;
+  animation: ring-expand 6s linear infinite;
+  z-index: -2;
+  pointer-events: none;
+}
+
+@keyframes ring-expand {
+  0% {
+    transform: translate3D(0, 0, 0) scaleX(1) scaleY(1);
+    opacity: 1;
+  }
+  30% {
+    transform: translate3D(0, 0, 0) scale(2.5);
+    opacity: 0;
+  }
+  100% {
+    transform: translate3D(0, 0, 0) scale(2.5);
+    opacity: 0;
+  }
+}
+
+.RoundButton__ring:nth-of-type(1) {
+  animation-delay: 0;
+}
+.RoundButton__ring:nth-of-type(2) {
+  animation-delay: 0.4s;
+}
+.RoundButton__ring:nth-of-type(3) {
+  animation-delay: 0.8s;
+}
+.RoundButton__ring:nth-of-type(4) {
+  animation-delay: 1.2s;
+}
+
+.RoundButton--default {
+  @apply w-16;
+  @apply h-16;
+}
+
+.RoundButton--default i {
+  @apply text-3xl;
+}
+
+.RoundButton--small {
+  @apply w-12;
+  @apply h-12;
+}
+
+.RoundButton--small i {
+  @apply text-xl;
+  @apply text-gray-800;
+}
