@@ -43,6 +43,7 @@ export class SegmentService {
     return SegmentDataSchema.parse({
       id: snapshot.id,
       ...fromFirestoreTypes(snapshot.data()!),
+      frameId: snapshot.ref.parent.parent!.id,
     }) as Segment
   }
 

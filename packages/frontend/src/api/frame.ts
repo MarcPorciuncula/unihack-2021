@@ -1,3 +1,4 @@
+import { doc } from "prettier"
 import { firebase, FirestoreDataConverter } from "../firebase"
 
 export type Frame = {
@@ -21,6 +22,7 @@ export function getFramesCollection(firestore: firebase.firestore.Firestore) {
 
 export type Drawing = {
   tile: { x: number; y: number }
+  segmentId: string
   paths: Uint8Array[]
 }
 
@@ -52,4 +54,36 @@ export function getDrawingCollection(
     .doc(frameId)
     .collection("drawings")
     .withConverter(DrawingConverter)
+}
+
+export type Segment = {
+  claimant: string | null
+  claimedAt: Date | null
+  isAvailable: boolean
+  tiles: {
+    location: [number, number]
+  }[]
+}
+
+export function getSegmentsCollection(
+  firestore: firebase.firestore.Firestore,
+  frameId: string
+) {
+  return firestore
+    .collection("frames")
+    .doc(frameId)
+    .collection("segments")
+    .withConverter(SegmentConverter)
+}
+
+export const SegmentConverter: FirestoreDataConverter<Segment> = {
+  fromFirestore: (snapshot) => {
+    return {
+      claimant: snapshot.get("claimant"),
+      claimedAt: snapshot.get("claimedAt")?.toDate() || null,
+      isAvailable: snapshot.get("isAvailable"),
+      tiles: snapshot.get("tiles"),
+    }
+  },
+  toFirestore: null!,
 }

@@ -37,6 +37,7 @@
     "firebase": "^8.2.10",
     "framer-motion": "beta",
     "paper": "^0.12.11",
+    "ramda": "^0.27.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-router-dom": "^5.2.0",

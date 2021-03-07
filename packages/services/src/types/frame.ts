@@ -5,6 +5,7 @@ export type Segment = {
   // if the segment has been claimed, has a reference to the user
   claimant: string | null
   claimedAt: Date | null
+  frameId: string
 }
 
 export type User = {

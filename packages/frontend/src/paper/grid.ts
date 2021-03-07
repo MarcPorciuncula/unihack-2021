@@ -1,6 +1,8 @@
 export class Grid {
   readonly group: paper.Group
   readonly lines: paper.Group
+  private viewBounds: paper.Rectangle | null = null
+  private viewPadding: number = 0
 
   constructor(
     private paper: paper.PaperScope,
@@ -35,12 +37,35 @@ export class Grid {
   }
 
   center() {
-    this.paper.view.translate(
-      this.paper.view.center.subtract(this.group.bounds.center)
+    this.focus(new this.paper.Rectangle(new this.paper.Point(0, 0), this.size))
+  }
+
+  focus(bounds: paper.Rectangle, padding: number = 0) {
+    this.viewBounds = bounds
+    this.viewPadding = padding
+
+    this.updateView()
+  }
+
+  updateView() {
+    if (!this.viewBounds) return
+
+    const scaledBounds = new this.paper.Rectangle(
+      this.viewBounds.topLeft
+        .subtract(new this.paper.Point(this.viewPadding, this.viewPadding))
+        .multiply(this.unit),
+      this.viewBounds.bottomRight
+        .add(new this.paper.Point(this.viewPadding, this.viewPadding))
+        .multiply(this.unit)
     )
 
-    const ratio = this.paper.view.size.divide(this.group.bounds.size)
-    this.paper.view.scale(Math.min(ratio.width, ratio.height))
+    this.paper.view.translate(
+      this.paper.view.center.subtract(scaledBounds.center)
+    )
+
+    const ratio = this.paper.view.size.divide(scaledBounds.size)
+    this.paper.view.zoom =
+      this.paper.view.zoom * Math.min(ratio.width, ratio.height)
   }
 
   remove() {

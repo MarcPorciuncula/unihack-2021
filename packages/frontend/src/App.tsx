@@ -4,7 +4,7 @@ import { firestore } from "./firebase"
 import { useDocumentSub } from "./firestore-hooks"
 import logo from "./logo.svg"
 import { FrameView } from "./routes/frame"
-import { DrawPage } from "./routes/frame/draw"
+import { DrawPage } from "./routes/draw"
 import QRCode from "./routes/qr-codes/qr-code"
 
 const ref = firestore.collection("messages").doc("main")
@@ -35,8 +35,13 @@ function App() {
         <Route path="/frame/:frameId" exact>
           {({ match }) => <FrameView frameId={match!.params.frameId} />}
         </Route>
-        <Route path="/frame/:frameId/draw" exact>
-          {({ match }) => <DrawPage frameId={match!.params.frameId} />}
+        <Route path="/frame/:frameId/:segmentId/draw" exact>
+          {({ match }) => (
+            <DrawPage
+              frameId={match!.params.frameId}
+              segmentId={match!.params.segmentId}
+            />
+          )}
         </Route>
         <Route path="/q/:id">
           <QRCode />
