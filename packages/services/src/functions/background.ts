@@ -116,7 +116,7 @@ export function register(builder: functions.FunctionBuilder) {
       res.json({ a: "done" })
     }),
     segmentProvisioningTask: builder.pubsub
-      .schedule("every 1 minutes")
+      .schedule("every 5 minutes")
       .onRun(async (context) => {
         await provision()
       }),
