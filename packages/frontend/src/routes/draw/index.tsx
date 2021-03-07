@@ -1,4 +1,5 @@
 import * as cbor from "cbor-web"
+import { AnimatePresence, motion } from "framer-motion"
 import { max, min } from "ramda"
 import React, { Fragment, useEffect, useMemo, useRef, useState } from "react"
 
@@ -14,6 +15,8 @@ import { Grid, usePaper } from "../../paper"
 import { PencilTool } from "../../paper/pencil"
 
 const BASIS = 150
+
+type Status = "draw" | "sign" | "review" | "done"
 
 export function DrawPage({
   frameId,
@@ -33,7 +36,9 @@ export function DrawPage({
     ])
   )
 
-  const [isDrawing, setDrawing] = useState(false)
+  const [status, setStatus] = useState<Status | null>(null)
+  const [drawing, setDrawing] = useState<Uint8Array[]>([])
+  const [signature, setSignature] = useState<Uint8Array[]>([])
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const paperRef = usePaper(canvasRef)
@@ -62,15 +67,6 @@ export function DrawPage({
     if (frame) {
       const controller = new DrawController(paperRef.current!, {
         frameDimensions: new paper.Size(frame.size.width, frame.size.height),
-        onComplete: async (paths) => {
-          await getDrawingCollection(firestore, frame.id)
-            .doc()
-            .set({
-              segmentId: segmentId,
-              tile: { x: 4, y: 4 },
-              paths: paths,
-            })
-        },
       })
       controllerRef.current = controller
       return () => {
@@ -84,12 +80,31 @@ export function DrawPage({
   }
 
   const handleStart = () => {
-    setDrawing(true)
-    controllerRef.current?.startDrawing(bounds!)
+    setStatus("draw")
+    controllerRef.current?.start(bounds!)
   }
 
   const handleCompleteDrawing = () => {
-    controllerRef.current?.completeDrawing()
+    const paths = controllerRef.current!.complete()
+    setDrawing(paths)
+    controllerRef.current!.start(bounds!)
+    setStatus("sign")
+  }
+
+  const handleCompleteSignature = () => {
+    const signature = controllerRef.current!.complete()
+    setSignature(signature)
+    setStatus("review")
+  }
+
+  const send = async () => {
+    await getDrawingCollection(firestore, frame!.id)
+      .doc()
+      .set({
+        segmentId: segmentId,
+        tile: { x: 4, y: 4 },
+        paths: drawing,
+      })
   }
 
   return (
@@ -97,32 +112,60 @@ export function DrawPage({
       <canvas
         ref={canvasRef}
         style={{
-          opacity: isDrawing ? 1 : 0,
+          opacity: status !== null ? 1 : 0,
           transition: "opacity 450ms ease",
         }}
       />
 
-      <div className="fixed left-0 bottom-0 right-0 flex items-center justify-center pb-8">
-        {bounds && !isDrawing ? (
-          <RoundButton icon="edit" pulse onClick={handleStart} />
-        ) : null}
-        {isDrawing ? (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr auto 1fr",
-              gridGap: "1rem",
-            }}
-          >
-            <div className="flex items-center">
-              <RoundButton icon="undo" size="small" onClick={handleUndo} />
-            </div>
-            <RoundButton icon="done" onClick={handleCompleteDrawing} />
-            <div className="flex items-center">
-              {/* <RoundButton icon="delete" size="small" /> */}
-            </div>
+      <div className="fixed left-0 top-0 right-0 flex items-center justify-center pt-8 px-8">
+        {status ? (
+          <div className="border-gray-100  border-2 w-full rounded-lg text-center p-4 bg-white bg-opacity-50">
+            <AnimatePresence exitBeforeEnter>
+              {status === "draw" ? (
+                <FlipText key="draw">Leave your mark</FlipText>
+              ) : null}
+              {status === "sign" ? (
+                <FlipText key="sign">Sign off on your work</FlipText>
+              ) : null}
+              {status === "review" ? (
+                <FlipText key="sign">Send it off!</FlipText>
+              ) : null}
+            </AnimatePresence>
           </div>
         ) : null}
+      </div>
+
+      <div className="fixed left-0 bottom-0 right-0 flex items-center justify-center pb-8">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr auto 1fr",
+            gridGap: "1rem",
+          }}
+        >
+          <div className="flex items-center">
+            {status === "draw" || status === "sign" ? (
+              <RoundButton icon="undo" size="small" onClick={handleUndo} />
+            ) : null}
+          </div>
+          <div>
+            {bounds && status === null ? (
+              <RoundButton icon="edit" pulse onClick={handleStart} />
+            ) : null}
+            {status === "draw" ? (
+              <RoundButton icon="done" onClick={handleCompleteDrawing} />
+            ) : null}
+            {status === "sign" ? (
+              <RoundButton icon="done" onClick={handleCompleteSignature} />
+            ) : null}
+            {status === "review" ? (
+              <RoundButton icon="send" pulse onClick={send} />
+            ) : null}
+          </div>
+          <div className="flex items-center">
+            {/* <RoundButton icon="delete" size="small" /> */}
+          </div>
+        </div>
       </div>
     </Fragment>
   )
@@ -131,23 +174,21 @@ export function DrawPage({
 class DrawController {
   readonly grid: Grid
   readonly pencil: paper.Tool
+  readonly noop: paper.Tool
   readonly drawing: paper.Group
   readonly coord: paper.Point
-  readonly onComplete: (paths: Uint8Array[]) => void
+  private border: paper.Item | undefined
 
   constructor(
     private paper: paper.PaperScope,
     {
-      onComplete,
       frameDimensions,
     }: {
-      onComplete: (paths: Uint8Array[]) => void
       frameDimensions: paper.Size
     }
   ) {
     this.handleNewPath = this.handleNewPath.bind(this)
     this.handleResize = this.handleResize.bind(this)
-    this.onComplete = onComplete
 
     this.grid = new Grid(paper, BASIS, frameDimensions)
     this.pencil = PencilTool(paper, {
@@ -160,6 +201,7 @@ class DrawController {
         return p
       },
     })
+    this.noop = new this.paper.Tool()
 
     this.coord = new this.paper.Point(1, 1)
     this.drawing = new this.paper.Group()
@@ -180,32 +222,36 @@ class DrawController {
     path.addTo(this.drawing)
   }
 
-  startDrawing(bounds: paper.Rectangle) {
+  start(bounds: paper.Rectangle) {
     this.grid.focus(bounds, 0.2)
-
-    const border = new this.paper.Path.Rectangle(
+    this.border = new this.paper.Path.Rectangle(
       new this.paper.Rectangle(
         bounds.point.multiply(this.grid.unit),
         bounds.size.multiply(this.grid.unit)
-      )
+      ),
+      new this.paper.Size(5, 5)
     )
       .set({
         strokeColor: new this.paper.Color("black"),
-        opacity: 0.4,
+        strokeCap: "round",
+        strokeWidth: 3,
+        opacity: 0.2,
       })
       .addTo(this.grid.group)
+    this.pencil.activate()
   }
 
-  completeDrawing() {
-    if (!this.drawing.children.length) return
+  complete() {
+    if (!this.drawing.children.length) return []
 
-    this.onComplete(
-      this.drawing.children.map((item) =>
-        cbor.encode(item.exportJSON({ asString: false }))
-      )
+    const paths = this.drawing.children.map((item) =>
+      cbor.encode(item.exportJSON({ asString: false }))
     )
-
     this.drawing.removeChildren()
+    this.border?.remove()
+    this.noop.activate()
+
+    return paths
   }
 
   undo() {
@@ -217,5 +263,20 @@ class DrawController {
 
     this.grid.remove()
     this.pencil.remove()
+    this.noop.remove()
   }
+}
+
+function FlipText({ children }: { children?: React.ReactNode }) {
+  return (
+    <motion.p
+      className="text-lg"
+      initial={{ y: "50%", opacity: 0 }}
+      animate={{ y: "0", opacity: 1 }}
+      exit={{ y: "-50%" }}
+      transition={{ stiffness: 50 }}
+    >
+      {children}
+    </motion.p>
+  )
 }

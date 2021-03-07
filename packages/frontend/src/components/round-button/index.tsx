@@ -20,7 +20,12 @@ export function RoundButton({
       )}
       {...rest}
     >
-      <i className="material-icons-round">{icon}</i>
+      <i
+        className="material-icons-round"
+        style={{ transform: icon === "send" ? "translateX(2px)" : undefined }}
+      >
+        {icon}
+      </i>
       {pulse ? (
         <Fragment>
           <div className="RoundButton__ring" />
