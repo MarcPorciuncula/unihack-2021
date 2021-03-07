@@ -35,7 +35,8 @@ export class PathRedrawer {
 
   private createFrameHandler() {
     return (e: any) => {
-      if (!this.offset) e.delta = 0.1
+
+      if (!this.offset) e.delta = 0.00001
 
       if (this.offset < this.path.length) {
         this.newPath.add(this.path.getPointAt(this.offset))
@@ -47,18 +48,18 @@ export class PathRedrawer {
   }
 
   public draw() {
-    const frameHandler = this.createFrameHandler()
-    // Listen for the stop event.
-    window.addEventListener(
-      "frameOff",
-      (e: DrawFinishEvent) => {
+    return new Promise<void>(resolve => {
+      const frameHandler = this.createFrameHandler()
+      // Listen for the stop event.
+      window.addEventListener('frameOff', (e: DrawFinishEvent) => {
         if (e.id === this.newPath.id) {
-          this.newPath.off("frame", frameHandler)
+          this.newPath.off('frame', frameHandler)
+          resolve()
         }
-      },
-      false
-    )
+      }, false);
 
-    this.newPath.onFrame = frameHandler
+      this.newPath.onFrame = frameHandler
+    })
+
   }
 }

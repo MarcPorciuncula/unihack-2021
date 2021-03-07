@@ -1,24 +1,25 @@
 import { motion } from "framer-motion"
-import { useEffect } from "react"
 import { useHistory, useParams } from "react-router"
+import { useContext, useEffect } from "react"
 import AppFrame from "../../components/AppFrame"
+import { AuthContext } from "../../contexts/AuthContext"
 import {
   useCloudFunction,
   useDelayedCloudFunction,
 } from "../../firestore-hooks/use-cloud-function"
-import { useUID } from "../../hooks/use-uid"
 import {
   fadeIn,
   fadeInUp,
   withVariantProps,
 } from "../../util/animationVariants"
 
+
 const QRCode = () => {
   const history = useHistory()
   const { id } = useParams<{ id: string }>()
   const { data, errors } = useCloudFunction("qr-get", { id })
 
-  const { uid } = useUID()
+  const { uid } = useContext(AuthContext)
 
   const [
     claimSegment,
